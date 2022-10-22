@@ -1,0 +1,108 @@
+﻿@page "/fetchdata"
+@using Newtonsoft.Json
+@using RestSharp
+@using System.Security.Claims
+@inject HttpClient Http
+
+<PageTitle>ToDos</PageTitle>
+
+<h1>ToDos</h1>
+
+<p>This component demonstrates fetching data from the server.</p>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p><em>@errorMessage</em></p>
+}
+else
+{
+    @if (todos == null)
+    {
+        <p><em>Loading...</em></p>
+    }
+    else
+    {
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Title</th>
+                    <th>Url</th>
+                    <th>Compelted</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var todo in todos)
+                {
+                    <tr>
+                        <td>@todo.Id</td>
+                        <td>@todo.title</td>
+                        <td>@todo.url</td>
+                        <td>@todo.completed</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+@code {
+    [Inject]
+    IAccessTokenProvider AccessTokenProvider { get; set; }
+
+    [Inject]
+    IConfiguration Configuration { get; set; }
+
+    private ToDo[]? todos;
+
+    private string errorMessage = string.Empty;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetData();
+    }
+
+    protected async Task GetData()
+    {
+        try
+        {
+            errorMessage = string.Empty;
+            var accessTokenResult = await AccessTokenProvider.RequestAccessToken();
+            if (accessTokenResult.TryGetToken(out var token))
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, Configuration.GetValue<string>("ToDosUri"));
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Value);
+                var result = await Http.SendAsync(request);
+
+                if (result.IsSuccessStatusCode)
+                {
+                    todos = JsonConvert.DeserializeObject<ToDo[]>(await result.Content.ReadAsStringAsync());
+                }
+                else
+                {
+                    errorMessage = $"{result.StatusCode} - {await result.Content.ReadAsStringAsync()}";
+                }
+            }
+            else
+            {
+                errorMessage = "Please login";
+                return;
+            }
+        }
+        catch (Exception e)
+        {
+            errorMessage = e.Message;
+        }
+    }
+
+    public class ToDo
+    {
+        public Guid Id { get; set; }
+        public string title { get; set; }
+
+        public int order { get; set; }
+        public string url { get; set; }
+
+        public bool completed { get; set; }
+    }
+}
