@@ -71,7 +71,6 @@ else
             if (accessTokenResult.TryGetToken(out var token))
             {
                 var request = new HttpRequestMessage(HttpMethod.Get, Configuration.GetValue<string>("ToDosUri"));
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Value);
                 var result = await Http.SendAsync(request);
 
                 if (result.IsSuccessStatusCode)

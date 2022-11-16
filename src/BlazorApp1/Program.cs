@@ -22,7 +22,7 @@ internal class Program
         builder.Services.AddMsalAuthentication(options =>
         {
             builder.Configuration.Bind("AzureAd", options.ProviderOptions.Authentication);
-            options.ProviderOptions.DefaultAccessTokenScopes.Add("https://sql.azuresynapse-dogfood.net/user_impersonation");
+            options.ProviderOptions.DefaultAccessTokenScopes.Add("https://graph.microsoft.com/User.Read");
         });
 
         await builder.Build().RunAsync();
