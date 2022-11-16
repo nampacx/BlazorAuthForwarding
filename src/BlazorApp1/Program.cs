@@ -15,8 +15,7 @@ internal class Program
             .AddTransient<HttpClient, HttpClient>(sp =>
             {
                 var config = sp.GetRequiredService<IConfiguration>();
-                var localhost = config.GetValue<string>("LocalhostBaseAddress");
-                return new HttpClient { BaseAddress = new Uri(localhost ?? builder.HostEnvironment.BaseAddress) };
+                return new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) };
             });
 
         builder.Services.AddMsalAuthentication(options =>
